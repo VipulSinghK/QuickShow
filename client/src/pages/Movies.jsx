@@ -1,6 +1,8 @@
 import { ArrowRight } from 'lucide-react'
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '@clerk/clerk-react'
+import toast from 'react-hot-toast' // Import toast
 
 const featuredMovies = [
   {
@@ -129,6 +131,7 @@ const Movies = () => {
   const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedGenre, setSelectedGenre] = useState('All')
+  const { isSignedIn } = useAuth() // Get auth status
 
   const genres = ['All', ...new Set(featuredMovies.flatMap(movie => movie.genres.map(g => g.name)))]
 
@@ -139,6 +142,27 @@ const Movies = () => {
 
   const handleNavigate = (movie) => {
     navigate(`/movie/${movie.id}`, { state: { movie } })
+  }
+
+  const handleBookNow = (movie, e) => {
+    e.stopPropagation()
+    
+    if (!isSignedIn) {
+      // Show toast notification for unauthenticated users
+      toast.error('Please log in to book tickets', {
+        duration: 4000,
+        position: 'top-center',
+        style: {
+          background: '#1f2937',
+          color: 'white',
+          border: '1px solid #374151',
+        },
+      })
+      return
+    }
+    
+    // If user is logged in, proceed to booking
+    handleNavigate(movie)
   }
 
   return (
@@ -197,10 +221,7 @@ const Movies = () => {
                     </span>
                   </div>
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleNavigate(movie)
-                    }}
+                    onClick={(e) => handleBookNow(movie, e)}
                     className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors text-sm"
                   >
                     Book Now

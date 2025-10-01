@@ -38,39 +38,43 @@ const SeatLayout = () => {
   ];
 
   useEffect(() => {
-    const fetchShow = async () => {
-      setLoading(true);
-      try {
-        const show = dummyShowsData.find((s) => s._id === id);
-        if (show) {
-          // Create enhanced dateTime data for all dates
-          const enhancedDateTime = {};
-          Object.keys(dummyDateTimeData).forEach(dateKey => {
-            enhancedDateTime[dateKey] = enhancedShowtimes.map(time => ({
-              time,
-              availableSeats: Array.from({ length: 120 }, (_, i) => 
-                `${String.fromCharCode(65 + Math.floor(i / 12))}${(i % 12) + 1}`
-              )
-            }));
-          });
+  const fetchShow = async () => {
+    setLoading(true);
+    try {
+      const show = dummyShowsData.find((s) => s._id === id);
+      if (show) {
+        // Create enhanced dateTime data for all dates
+        const enhancedDateTime = {};
+        Object.keys(dummyDateTimeData).forEach(dateKey => {
+          enhancedDateTime[dateKey] = enhancedShowtimes.map(time => ({
+            time,
+            availableSeats: Array.from({ length: 120 }, (_, i) =>
+              `${String.fromCharCode(65 + Math.floor(i / 12))}${(i % 12) + 1}`
+            )
+          }));
+        });
 
-          setShow({
-            movie: show,
-            dateTime: enhancedDateTime
-          });
-          setSelectedTime(enhancedShowtimes[0]);
-        } else {
-          setShow(null);
-        }
-      } catch (error) {
-        console.error('Error fetching show:', error);
+        setShow({
+          movie: show,
+          dateTime: enhancedDateTime
+        });
+        setSelectedTime(enhancedShowtimes[0]);
+      } else {
         setShow(null);
-      } finally {
-        setLoading(false);
       }
-    };
-    fetchShow();
-  }, [id, date]);
+    } catch (error) {
+      console.error('Error fetching show:', error);
+      setShow(null);
+    } finally {
+      // ⏳ Add artificial loading delay here
+      setTimeout(() => {
+        setLoading(false);
+      }, 1000); // 2 seconds
+    }
+  };
+  fetchShow();
+}, [id, date]);
+
 
   const handleTimeSelect = (time) => {
     setSelectedTime(time);
@@ -196,7 +200,7 @@ const SeatLayout = () => {
                   return (
                     <button
                       key={`${time}-${index}`}
-                      className={`relative group p-3 rounded-lg transition-all duration-300 font-semibold text-sm ${
+                      className={`relative group p-3 rounded-lg transition-all duration-300 font-semibold text-sm cursor-pointer ${
                         selectedTime === time 
                           ? 'bg-gradient-to-br from-red-600 to-red-800 text-white shadow-lg shadow-red-900/50 scale-105' 
                           : 'bg-gray-900 text-gray-300 border border-gray-800 hover:border-red-600/50 hover:bg-gray-800 hover:scale-102'

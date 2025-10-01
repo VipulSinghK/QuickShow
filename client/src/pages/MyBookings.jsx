@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Calendar, Clock, MapPin, Ticket, User, Download, Trash2, Film } from 'lucide-react';
+import { Calendar, Clock, MapPin, Ticket, User, Download, Trash2, Film, CreditCard } from 'lucide-react';
 
 const MyBookings = () => {
   const navigate = useNavigate();
@@ -16,14 +16,14 @@ const MyBookings = () => {
       const newBooking = {
         id: `BK${Date.now()}`,
         movieTitle: location.state.movieTitle,
-        // Use the image from the movie data instead of poster_path
         poster_path: location.state.show?.movie?.image || location.state.show?.movie?.poster_path || 'https://via.placeholder.com/300x400?text=Movie+Poster',
         date: location.state.date,
         time: location.state.time,
         seats: location.state.seats,
         totalPrice: location.state.totalPrice,
         screen: 'A',
-        bookingDate: new Date().toISOString()
+        bookingDate: new Date().toISOString(),
+        paymentStatus: location.state.paymentStatus || 'pending' // Store payment status
       };
       
       const updatedBookings = [newBooking, ...existingBookings];
@@ -63,6 +63,10 @@ const MyBookings = () => {
   });
 
   const handleDownloadTicket = (booking) => {
+    if (booking.paymentStatus !== 'success') {
+      alert('Please complete the payment to download the ticket.');
+      return;
+    }
     alert(`Downloading ticket for ${booking.movieTitle}`);
   };
 
@@ -73,6 +77,19 @@ const MyBookings = () => {
       localStorage.setItem('movieBookings', JSON.stringify(updatedBookings));
       alert('Booking cancelled successfully');
     }
+  };
+
+  const handleProceedToPayment = (booking) => {
+    navigate('/payment-gateway', {
+      state: {
+        movieTitle: booking.movieTitle,
+        date: booking.date,
+        time: booking.time,
+        seats: booking.seats,
+        totalPrice: booking.totalPrice,
+        bookingId: booking.id // Pass booking ID to track in PaymentGateway
+      }
+    });
   };
 
   if (isLoading) {
@@ -221,16 +238,29 @@ const MyBookings = () => {
                           <div className="text-sm text-gray-500">
                             Booking ID: <span className="font-mono text-gray-400">{booking.id}</span>
                           </div>
+                          <div className="text-sm text-gray-500">
+                            Payment Status: <span className="font-mono text-gray-400">{booking.paymentStatus}</span>
+                          </div>
                         </div>
 
                         <div className="flex lg:flex-col gap-2">
-                          <button
-                            onClick={() => handleDownloadTicket(booking)}
-                            className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-2 rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-300 font-semibold text-sm shadow-lg shadow-red-900/50"
-                          >
-                            <Download size={16} />
-                            Download
-                          </button>
+                          {booking.paymentStatus === 'pending' ? (
+                            <button
+                              onClick={() => handleProceedToPayment(booking)}
+                              className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 font-semibold text-sm shadow-lg shadow-blue-900/50"
+                            >
+                              <CreditCard size={16} />
+                              Proceed to Payment
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleDownloadTicket(booking)}
+                              className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-2 rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-300 font-semibold text-sm shadow-lg shadow-red-900/50"
+                            >
+                              <Download size={16} />
+                              Download
+                            </button>
+                          )}
                           {isUpcoming && (
                             <button
                               onClick={() => handleCancelBooking(booking)}
