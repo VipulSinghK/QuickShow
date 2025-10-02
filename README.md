@@ -80,6 +80,7 @@ QuickShow/
 │   └── ...
 └── README.md
 
+
 Future Enhancements- 
 
 Admin Panel: A dashboard for theatre owners and admins to add movies, manage show timings, and view booking reports.
